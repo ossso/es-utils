@@ -1,6 +1,6 @@
 {
   "name": "@ossso/utils",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "常用工具",
   "main": "index.js",
   "author": "橙色阳光",
@@ -17,6 +17,16 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.4",
+    "@babel/register": "^7.13.16",
+    "babel-jest": "^27.5.1",
+    "jest": "^27.5.1",
+    "eslint": "^7.28.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.23.4"
   }
 }
