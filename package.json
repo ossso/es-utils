@@ -1,6 +1,6 @@
 {
   "name": "@ossso/utils",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "常用工具",
   "main": "index.js",
   "exports": { 
