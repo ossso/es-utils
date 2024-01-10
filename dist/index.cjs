@@ -282,7 +282,12 @@ class QuickDate {
     /**
      * 如果date是false、undefined、null等非法值，返回一个当前时间对象
      */
-    if (!date && date !== 0) {
+    if (
+      date === false
+      || date === undefined
+      || date === null
+      || date === ''
+    ) {
       return new Date();
     }
     /**
@@ -295,7 +300,7 @@ class QuickDate {
     /**
      * 把字符串数字也当作时间戳来处理
      */
-    if (typeof date === 'string' && !/\D/.test(date)) {
+    if (typeof date === 'string' && !/[^0-9]/.test(date)) {
       return new Date(parseInt(date, 10));
     }
     /**
@@ -390,6 +395,34 @@ class QuickDate {
   }
 
   /**
+   * 获取指定日期的开始时间戳或者结束时间戳
+   * @param {String|Date|Number} date 日期符号
+   * @param {String} tag start开始 end结束
+   * @returns {Number} 毫秒级时间戳
+   */
+  getDateFixed(date, tag = 'start') {
+    const d = this.auto(date);
+    if (tag === 'start') {
+      d.setHours(0, 0, 0, 0);
+    }
+    if (tag === 'end') {
+      d.setHours(23, 59, 59, 999);
+    }
+    return d;
+  }
+
+  /**
+   * 获取指定日期的开始时间戳或者结束时间戳
+   * @param {String|Date|Number} date 日期符号
+   * @param {String} tag start开始 end结束
+   * @returns {Number} 毫秒级时间戳
+   */
+  getTimeFixed(date, tag = 'start') {
+    const d = this.getDateFixed(date, tag);
+    return d.getTime();
+  }
+
+  /**
    * 多久前or后
    * @param {String|Number|Date} aDate 对比时间
    * @param {String|Number|Date} bDate 缺省为当前时间
@@ -402,7 +435,7 @@ class QuickDate {
     const aTime = this.auto(aDate).getTime();
     const bTime = this.auto(bDate).getTime();
     const s = Math.abs(aTime - bTime);
-    const symbol = aTime - bTime > 0 ? '后' : '前';
+    const symbol = aTime - bTime < 0 ? '前' : '后';
     if (s < 5 * 1000) {
       if (symbol === '前') {
         return '刚刚';
@@ -459,25 +492,21 @@ class QuickDate {
   }
 
   /**
-   * 增加或者减少合同版本月份数日期
+   * 自然月变更
    * @param {Number} num 变更的月数
    * @param {String|Number|Date} date 变更日期
    *
    * @return {Date}
    */
-  changeContractMonth(num, date = null) {
-    const d = this.auto(this.format('yyyy-mm-dd hh:ii:ss', date));
+  changeNaturalMonth(num, date = null) {
+    const d = this.auto(date);
     if (num === 0) {
       return d;
     }
     const currentYear = d.getFullYear();
     const currentMonth = d.getMonth();
     const currentDate = d.getDate();
-    const currentEndOfMonth = QuickDate.endOfMonth(
-      currentYear,
-      currentMonth + 1,
-      currentDate,
-    );
+    const currentEndOfMonth = this.constructor.endOfMonth(currentYear, currentMonth + 1, currentDate);
     const countMonth = currentMonth + parseInt(num, 10);
     const yearNumber = currentYear + Math.ceil(countMonth / 12) - 1;
     let monthNumber = countMonth;
@@ -510,6 +539,97 @@ class QuickDate {
     }
     dateNumber -= 1;
     return reDate();
+  }
+
+  /**
+   * *兼容方法*
+   * 合同月份版本 -> 自然月
+   */
+  changeContractMonth(...args) {
+    console.warn('changeContractMonth is deprecated, use changeNaturalMonth instead');
+    return this.changeNaturalMonth(...args);
+  }
+
+  /**
+   * 月份转为开始至结束的日期范围
+   * @param {String|Date|Number} date 日期
+   * @returns {Array} [开始日期, 结束日期] 毫秒值
+   */
+  monthToDateRange(date) {
+    const dS = this.auto(date);
+    dS.setDate(1);
+    const dE = this.auto(dS);
+    dE.setMonth(dE.getMonth() + 1);
+    dE.setDate(0);
+    return [
+      this.getTimeFixed(dS, 'start'),
+      this.getTimeFixed(dE, 'end'),
+    ];
+  }
+
+  /**
+   * 根据日期生成对应月份的开始日期与结束日期
+   * @param {String|Date|Number} date 日期
+   * @returns {Array[Date]} [开始日期, 结束日期] Date对象
+   */
+  monthFirst2Last(date) {
+    const dS = this.auto(date);
+    dS.setDate(1);
+    const dE = this.auto(dS);
+    dE.setMonth(dE.getMonth() + 1);
+    dE.setDate(0);
+    return [
+      this.auto(this.getTimeFixed(dS, 'start')),
+      this.auto(this.getTimeFixed(dE, 'end')),
+    ];
+  }
+
+  /**
+   * 判定是否为月模式
+   *  endDate 缺省兼容 传入一个值返回对应月份的开始和结束
+   * @param {String|Date|Number} startDate
+   * @param {String|Date|Number} endDate
+   * @returns {Boolean|Array}
+   */
+  monthStartToEnd(startDate, endDate) {
+    if (!endDate && endDate !== 0) {
+      return this.monthToDateRange(startDate);
+    }
+
+    const autoStartDate = this.auto(startDate);
+    const endDateByStartDate = this.auto(startDate);
+    endDateByStartDate.setMonth(endDateByStartDate.getMonth() + 1);
+    endDateByStartDate.setDate(0);
+
+    return (
+      autoStartDate.getDate() === 1
+      && this.format('yyyymmdd', endDateByStartDate) === this.format('yyyymmdd', endDate)
+    );
+  }
+
+  /**
+   * 根据日期索引，计算开始和结束日期
+   * @param {String} type
+   * @param {Date|Number|String} dd 指定时间
+   */
+  dateRangeByType(type, dd) {
+    // 指定日期 - 留空默认为当天
+    const dDate = this.auto(dd);
+    // if (type === 'today')
+    let startDate = dDate;
+    let endDate = dDate;
+    // 计算开始和结束日期
+    if (type === 'week') {
+      const week = dDate.getDay() || 7;
+      // 将开始日期设置为周一，结束日期设置为周日
+      startDate = this.changeDate(-(week - 1), dDate);
+      endDate = this.changeDate(7 - week, dDate);
+    } else
+    if (type === 'month') {
+      [startDate, endDate] = this.monthFirst2Last(dd);
+    }
+
+    return [startDate, endDate];
   }
 
   /**
@@ -605,6 +725,193 @@ class QuickDate {
 
 const quickDate = new QuickDate();
 
+/**
+ * 求和方法
+ */
+const sum = (...args) => {
+  if (!args.length) return 0;
+  const nums = [...args].filter((i) => i && i !== true && parseFloat(i) === +i);
+  if (nums.length === 0) {
+    return 0;
+  }
+  if (nums.length === 1) {
+    return +nums[0];
+  }
+  return nums.reduce((tol, n) => {
+    const s = n.toString();
+    const dotIndex = s.indexOf('.');
+    if (dotIndex > -1) {
+      const pow = 10 ** (s.length - dotIndex);
+      return Math.round((tol * pow) + (n * pow)) / pow;
+    }
+    return tol + (+n);
+  });
+};
+const numbersReduce = sum;
+
+/**
+ * 涉及金额的工具
+ */
+
+// 转为 分
+const toPoint = (num) => Math.floor(Math.round((num * 1000)) / 10);
+const toFen = toPoint;
+
+/**
+ * 转为 元
+ * @param {Number} num
+ * @param {Boolean} locale
+ * @returns 返回元
+ */
+const toYuan = (num, locale = false) => {
+  const n = num / 100;
+  const symbol = n < 0 ? '-' : '';
+  // 处理浮点精度不正确的内容
+  try {
+    const s = n.toString();
+    if (s.indexOf('.') > -1 && s.indexOf('.') < s.length - 2) {
+      const [
+        int,
+        float,
+      ] = s.split('.');
+      const toYuan = `${symbol}${Math.abs(int)}.${float.substring(0, 2)}` * 1;
+      if (locale) {
+        return toYuan.toLocaleString();
+      }
+      return toYuan;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (locale) {
+    return n.toLocaleString();
+  }
+  return n;
+};
+const toRMB = toYuan;
+
+/**
+ * 数字金额转为万
+ */
+const toWan = (num, fixed = 1, type = 'yuan') => {
+  const symbol = num < 0 ? '-' : '';
+  const n = type === 'fen' ? Math.abs(yuan(num)) : Math.abs(num);
+  if (n >= 10000) {
+    const k = Math.round(n / 1000);
+    if (fixed === 0) {
+      return `${symbol}${(Math.round(k / 10) * 1).toLocaleString()}万`;
+    }
+    if (fixed > -1) {
+      return `${symbol}${parseFloat(k / 10).toFixed(fixed)}万`;
+    }
+    return `${symbol}${(parseFloat(k / 10).toFixed(2) * 1).toLocaleString()}万`;
+  }
+  return `${symbol}${(parseFloat(n).toFixed(2) * 1).toLocaleString()}`;
+};
+const toRMBWan = toWan;
+
+/**
+ * @description 数字转中文数码
+ *
+ * @param {Number|String}   num     数字[正整数]
+ * @param {String}          type    文本类型，lower|upper，默认upper
+ *
+ * @example number2Chinese(100000000) => "壹亿元整"
+ */
+const number2Chinese = (number, type = 'upper') => {
+  // 配置
+  const confs = {
+    lower: {
+      num: ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'],
+      unit: ['', '十', '百', '千', '万'],
+      level: ['', '万', '亿'],
+    },
+    upper: {
+      num: ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'],
+      unit: ['', '拾', '佰', '仟'],
+      level: ['', '万', '亿'],
+    },
+    decimal: {
+      unit: ['分', '角'],
+    },
+    maxNumber: 999999999999.99,
+  };
+
+  // 过滤不合法参数
+  if (Number(number) > confs.maxNumber) {
+    console.error(
+      `The maxNumber is ${confs.maxNumber}. ${number} is bigger than it!`,
+    );
+    return false;
+  }
+
+  const conf = confs[type];
+  const numbers = String(Number(number).toFixed(2)).split('.');
+  const integer = numbers[0].split('');
+  const decimal = Number(numbers[1]) === 0 ? [] : numbers[1].split('');
+
+  // 四位分级
+  const levels = integer.reverse().reduce((pre, item, idx) => {
+    const level = pre[0] && pre[0].length < 4 ? pre[0] : [];
+    const value = item === '0' ? conf.num[item] : conf.num[item] + conf.unit[idx % 4];
+    level.unshift(value);
+
+    if (level.length === 1) {
+      pre.unshift(level);
+    } else {
+      pre[0] = level;
+    }
+
+    return pre;
+  }, []);
+
+  // 整数部分
+  const _integer = levels.reduce((pre, item, idx) => {
+    let _level = conf.level[levels.length - idx - 1];
+    let _item = item.join('').replace(/(零)\1+/g, '$1'); // 连续多个零字的部分设置为单个零字
+
+    // 如果这一级只有一个零字，则去掉这级
+    if (_item === '零') {
+      _item = '';
+      _level = '';
+
+      // 否则如果末尾为零字，则去掉这个零字
+    } else if (_item[_item.length - 1] === '零') {
+      _item = _item.slice(0, _item.length - 1);
+    }
+
+    return pre + _item + _level;
+  }, '');
+
+  // 小数部分
+  const _decimal = decimal
+    .map((item, idx) => {
+      const { unit } = confs.decimal;
+      const _unit = item !== '0' ? unit[unit.length - idx - 1] : '';
+
+      return `${conf.num[item]}${_unit}`;
+    })
+    .join('');
+
+  // 如果是整数，则补个整字
+  return _integer ? `${_integer}元${_decimal || '整'}` : '';
+};
+const toUpper = number2Chinese;
+
+var rmbTool = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  toPoint: toPoint,
+  toFen: toFen,
+  toYuan: toYuan,
+  toRMB: toRMB,
+  toWan: toWan,
+  toRMBWan: toRMBWan,
+  number2Chinese: number2Chinese,
+  toUpper: toUpper
+});
+
+exports.RMBTool = rmbTool;
 exports.hasOwn = hasOwn;
 exports.idCardValid = idCardValid;
 exports.isEmpty = isEmpty;
@@ -614,4 +921,6 @@ exports.mapping = mapping;
 exports.mobileValid = mobileValid;
 exports.normalMoneyValid = normalMoneyValid;
 exports.numberToFixedValid = numberToFixedValid;
+exports.numbersReduce = numbersReduce;
 exports.quickDate = quickDate;
+exports.sum = sum;
