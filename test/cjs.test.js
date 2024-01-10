@@ -4,6 +4,7 @@ const {
   idCardValid,
   quickDate,
   mapping,
+  RMBTool,
 } = utils;
 
 test('身份证校验验证', () => {
@@ -23,4 +24,12 @@ test('mapping验证', () => {
   };
   // mapping映射是否正常
   expect(mapping(info, 'hello')).toBe('world');
+});
+
+test('RMBTool验证', () => {
+  // RMBTool是否正常
+  expect(RMBTool.toYuan(1000)).toBe(10);
+  expect(RMBTool.toYuan(1010)).toBe(10.1);
+  expect(RMBTool.toFen(10.01)).toBe(1001);
+  expect(RMBTool.toFen(12.05)).toBe(1205);
 });
