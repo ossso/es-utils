@@ -1,4 +1,4 @@
-const utils = require('../dist/index.cjs');
+import * as utils from '../dist/index';
 
 const {
   idCardValid,
@@ -47,3 +47,4 @@ test('validate验证', () => {
   expect(numberToFixedValid(10.01, 2)).toBe(true);
   expect(isEmpty('')).toBe(true);
 });
+

@@ -1,12 +1,11 @@
 {
   "name": "@ossso/utils",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "常用工具",
-  "main": "index.js",
-  "exports": { 
-    "require": "./dist/index.cjs",
-    "import": "./index.js" 
-  },
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "author": "橙色阳光",
   "license": "MIT",
   "repository": {
@@ -21,19 +20,30 @@
     "lib": "lib"
   },
   "scripts": {
-    "build:mjs": "rollup index.js --file dist/index.mjs --format es",
-    "build:cjs": "rollup index.js --file dist/index.cjs --format cjs",
+    "build": "rollup -c --bundleConfigAsCjs",
+    "lint": "eslint .",
     "test": "jest"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",
+    "@babel/plugin-transform-modules-commonjs": "^7.24.7",
     "@babel/preset-env": "^7.14.4",
+    "@babel/preset-typescript": "^7.24.7",
     "@babel/register": "^7.13.16",
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.10",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
     "babel-jest": "^27.5.1",
-    "eslint": "^7.28.0",
+    "eslint": "^9.6.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.23.4",
     "jest": "^27.5.1",
-    "rollup": "^2.70.1"
+    "rollup": "^4.18.1",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.3"
   }
 }

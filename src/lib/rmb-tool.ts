@@ -3,7 +3,7 @@
  */
 
 // 转为 分
-export const toPoint = (num) => Math.floor(Math.round((num * 1000)) / 10);
+export const toPoint = (num: number): number => Math.floor(Math.round((num * 1000)) / 10);
 export const toFen = toPoint;
 
 /**
@@ -12,18 +12,15 @@ export const toFen = toPoint;
  * @param {Boolean} locale
  * @returns 返回元
  */
-export const toYuan = (num, locale = false) => {
+export const toYuan = (num: number, locale: boolean = false): number | string => {
   const n = num / 100;
   const symbol = n < 0 ? '-' : '';
   // 处理浮点精度不正确的内容
   try {
     const s = n.toString();
     if (s.indexOf('.') > -1 && s.indexOf('.') < s.length - 2) {
-      const [
-        int,
-        float,
-      ] = s.split('.');
-      const toYuanString = `${symbol}${Math.abs(int)}.${float.substring(0, 2)}` * 1;
+      const [int, float] = s.split('.');
+      const toYuanString = Number(`${symbol}${Math.abs(Number(int))}.${float.substring(0, 2)}`);
       if (locale) {
         return toYuanString.toLocaleString();
       }
@@ -43,20 +40,20 @@ export const toRMB = toYuan;
 /**
  * 数字金额转为万
  */
-export const toWan = (num, fixed = 1, type = 'yuan') => {
+export const toWan = (num: number, fixed: number = 1, type: 'yuan' | 'fen' = 'yuan'): string => {
   const symbol = num < 0 ? '-' : '';
-  const n = type === 'fen' ? Math.abs(toYuan(num)) : Math.abs(num);
+  const n = type === 'fen' ? Math.abs(toYuan(num) as number) : Math.abs(num);
   if (n >= 10000) {
     const k = Math.round(n / 1000);
     if (fixed === 0) {
       return `${symbol}${(Math.round(k / 10) * 1).toLocaleString()}万`;
     }
     if (fixed > -1) {
-      return `${symbol}${parseFloat(k / 10).toFixed(fixed)}万`;
+      return `${symbol}${parseFloat((k / 10).toFixed(fixed))}万`;
     }
-    return `${symbol}${(parseFloat(k / 10).toFixed(2) * 1).toLocaleString()}万`;
+    return `${symbol}${(parseFloat((k / 10).toFixed(2)) * 1).toLocaleString()}万`;
   }
-  return `${symbol}${(parseFloat(n).toFixed(2) * 1).toLocaleString()}`;
+  return `${symbol}${(parseFloat(n.toFixed(2)) * 1).toLocaleString()}`;
 };
 export const toRMBWan = toWan;
 
@@ -68,7 +65,7 @@ export const toRMBWan = toWan;
  *
  * @example number2Chinese(100000000) => "壹亿元整"
  */
-export const number2Chinese = (number, type = 'upper') => {
+export const number2Chinese = (number: number | string, type: 'lower' | 'upper' = 'upper'): string => {
   // 配置
   const confs = {
     lower: {
@@ -90,7 +87,7 @@ export const number2Chinese = (number, type = 'upper') => {
   // 过滤不合法参数
   if (Number(number) > confs.maxNumber) {
     console.error(`The maxNumber is ${confs.maxNumber}. ${number} is bigger than it!`);
-    return false;
+    return '';
   }
 
   const conf = confs[type];
@@ -99,9 +96,9 @@ export const number2Chinese = (number, type = 'upper') => {
   const decimal = Number(numbers[1]) === 0 ? [] : numbers[1].split('');
 
   // 四位分级
-  const levels = integer.reverse().reduce((pre, item, idx) => {
+  const levels = integer.reverse().reduce((pre: string[][], item, idx) => {
     const level = pre[0] && pre[0].length < 4 ? pre[0] : [];
-    const value = item === '0' ? conf.num[item] : conf.num[item] + conf.unit[idx % 4];
+    const value = item === '0' ? conf.num[Number(item)] : conf.num[Number(item)] + conf.unit[idx % 4];
     level.unshift(value);
 
     if (level.length === 1) {
@@ -137,7 +134,7 @@ export const number2Chinese = (number, type = 'upper') => {
       const { unit } = confs.decimal;
       const $unit = item !== '0' ? unit[unit.length - idx - 1] : '';
 
-      return `${conf.num[item]}${$unit}`;
+      return `${conf.num[Number(item)]}${$unit}`;
     })
     .join('');
 
