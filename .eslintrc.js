@@ -14,6 +14,8 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'no-console': 'off',
     'no-proto': 'off',
+    'max-len': ['error', { code: 120 }],
   },
 };
