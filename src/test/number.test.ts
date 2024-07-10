@@ -1,4 +1,4 @@
-import { sum } from './number';
+import { sum } from '../lib/number';
 
 describe('sum', () => {
   it('should return 0 when no arguments are provided', () => {

@@ -46,34 +46,34 @@ const CITY_CODE: CityCodeMap = {
 
 /**
  * 验证身份证号码是否有效。
- * 
+ *
  * @param val 身份证号码字符串。
  * @returns 如果身份证号码有效返回true，否则返回false。
  */
 export const idCardValid = (val: string) => {
   // 将输入的字符串转换为大写并去除首尾空格，以统一处理。
   const str = (val || '').toUpperCase().trim();
-  
+
   // 如果处理后的字符串为空，则身份证号码无效。
   if (!str) {
     return false;
   }
-  
+
   // 检查身份证号码长度是否为18位。
   if (str.length !== 18) {
     return false;
   }
-  
+
   // 使用正则表达式检查身份证号码的格式是否正确。
   if (!/^\d{6}(18|19|20)?\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/i.test(str)) {
     return false;
   }
-  
+
   // 检查身份证号码的前两位是否在城市代码表中。
   if (!CITY_CODE[str.substring(0, 2)]) {
     return false;
   }
-  
+
   // 对于18位身份证，验证最后一位校验位是否正确。
   // 18位身份证需要验证最后一位校验位
   // ∑(ai×Wi)(mod 11)
@@ -90,7 +90,7 @@ export const idCardValid = (val: string) => {
     wi = factor[i];
     sum += ai * wi;
   }
-  
+
   // 检查校验位是否正确，即加权和模11的结果是否与最后一位相符。
   return parity[sum % 11] === str[17];
 };

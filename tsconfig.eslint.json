@@ -1,6 +1,0 @@
-{
-  "include": ["eslint.config.js"],
-  "compilerOptions": {
-	  "noEmit": true
-  }
-}

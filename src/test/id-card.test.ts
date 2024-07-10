@@ -1,4 +1,4 @@
-import idCardValid from './id-card';
+import idCardValid from '../lib/id-card';
 
 describe('idCardValid', () => {
   it('should return false when the input is an empty string', () => {
@@ -24,7 +24,7 @@ describe('idCardValid', () => {
   });
 
   it('should return true when the input is a valid ID card number', () => {
-    expect(idCardValid('11010119900307601X')).toBe(true);
-    expect(idCardValid('11010119900307601x')).toBe(true);
+    expect(idCardValid('11010120240710151X')).toBe(true);
+    expect(idCardValid('11010120240710151x')).toBe(true);
   });
 });

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-shadow */
 /**
  * 时间工具
  */
@@ -9,6 +11,7 @@ class QuickDate {
    *
    * @return {Date}
    */
+  // eslint-disable-next-line class-methods-use-this
   auto(date: number | string | Date | null = null): Date {
     /**
      * 如果date本身就是时间对象直接返回
@@ -56,6 +59,7 @@ class QuickDate {
    *
    * @return {Date}
    */
+  // eslint-disable-next-line class-methods-use-this
   parse(dateString: string): Date {
     return QuickDate.Parse(dateString);
   }
@@ -78,54 +82,24 @@ class QuickDate {
    */
   format(tpl: string = 'yyyy/mm/dd hh:ii:ss', date: string | number | Date | null = null): string {
     const d = this.auto(date);
-    const o: Record<string, string | number> = {};
-    o.yyyy = d.getFullYear();
-    o.yy = `${o.yyyy}`.substring(2);
-    o.m = d.getMonth() + 1;
-    o.mm = o.m < 10 ? `0${o.m}` : o.m;
-    o.d = d.getDate();
-    o.dd = o.d < 10 ? `0${o.d}` : o.d;
-    if (tpl && tpl.indexOf('h') > -1) {
-      o.h = d.getHours();
-      o.hh = o.h < 10 ? (`0${o.h}`) : o.h;
-      o.i = d.getMinutes();
-      o.ii = o.i < 10 ? (`0${o.i}`) : o.i;
-      o.s = d.getSeconds();
-      o.ss = o.s < 10 ? (`0${o.s}`) : o.s;
-      o.ms = d.getMilliseconds();
-      if (o.ms < 10) {
-        o.mss = `00${o.s}`;
-      } else if (o.ms < 100) {
-        o.mss = `0${o.ms}`;
-      } else {
-        o.mss = o.ms;
-      }
-    }
-    if (tpl && tpl.indexOf('w') > -1) {
-      o.w = d.getDay() || 7;
-      o.ww = `0${o.w}`;
-      o.wz = ('日一二三四五六')[o.w % 7];
-    }
-
-    const dateTemplate = tpl || 'yyyy/mm/dd';
-    const regexp = /(yyyy|yy|mss|ms|mm|m|dd|d|hh|h|ii|i|ss|s|wz|ww|w)/ig;
-    return dateTemplate.replace(regexp, (key) => o[key.toLowerCase()] as string);
+    return QuickDate.Format(tpl, d);
   }
 
   /**
    * 自动处理跨年份时间格式化
    * @param {string | string[] | { y: string, m: string, d: string }} symbol 分割符号
    * @param {string | number | Date | null} date 时间字符串或时间对象
+   *
+   * @return {string} 格式化后的时间字符串
    */
-  autoYearFormat(symbol: string | string[] | { y: string, m: string, d: string } = '/', date: string | number | Date | null = null): string {
+  autoYearFormat(
+    symbol: string | string[] | { y: string, m: string, d: string } = '/',
+    date: string | number | Date | null = null,
+  ): string {
     const d = this.auto(date);
     const dYear = d.getFullYear();
-    const nowYear = (new Date()).getFullYear();
-    if (nowYear !== dYear) {
-      const tpl = QuickDate.GetFormatTpl(symbol, true);
-      return this.format(tpl, d);
-    }
-    const tpl = QuickDate.GetFormatTpl(symbol);
+    const nowYear = new Date().getFullYear();
+    const tpl = QuickDate.GetFormatTpl(symbol, nowYear !== dYear);
     return this.format(tpl, d);
   }
 
@@ -162,7 +136,14 @@ class QuickDate {
    * @param {string | number | Date} aDate 对比时间
    * @param {string | number | Date | null} bDate 缺省为当前时间
    * @param {number} maxDays 对比的最大天数，超过后返回aDate的时间字符串
-   * @param {(aDate: string | number | Date, bDate: string | number | Date | null, maxDays: number, s: number, symbol: string) => string} callback 当超过指定天数后，可选执行回调函数的方式返回一个指定的字符串内容
+   * @param {
+   *  (
+   *  aDate: string | number | Date,
+   *  bDate: string | number | Date | null,
+   *  maxDays: number,
+   *  s: number,
+   *  symbol: string) => string
+   * } callback 当超过指定天数后，可选执行回调函数的方式返回一个指定的字符串内容
    *
    * @return {string} xxx前/后
    */
@@ -170,7 +151,15 @@ class QuickDate {
     aDate: string | number | Date,
     bDate: string | number | Date | null = null,
     maxDays: number = 365,
-    callback: ((aDate: string | number | Date, bDate: string | number | Date | null, maxDays: number, s: number, symbol: string) => string) | null = null
+    callback: (
+      (
+        aDate: string | number | Date,
+        bDate: string | number | Date | null,
+        maxDays: number,
+        s: number,
+        symbol: string
+      ) => string
+    ) | null = null,
   ): string {
     const aTime = this.auto(aDate).getTime();
     const bTime = this.auto(bDate).getTime();
@@ -194,6 +183,7 @@ class QuickDate {
     if (typeof callback === 'function') {
       return callback(aDate, bDate, maxDays, s, symbol);
     }
+    // 兼容旧格式
     return this.format(undefined, aDate);
   }
 
@@ -216,6 +206,7 @@ class QuickDate {
    * @param {number} month 月份
    * @return {Date}
    */
+  // eslint-disable-next-line class-methods-use-this
   getLastDayOfMonth(year: number, month: number): Date {
     const date = new Date(year, month, 0);
     date.setHours(23, 59, 59, 999);
@@ -309,10 +300,14 @@ class QuickDate {
 
   /**
    * 通过分隔符来获取时间模板
-   * @param {string | string[] | { y: string, m: string, d: string }} symbol 分割符号
+   * @param {string | string[] | { y: string, m: string, d: string }} symbol 分隔符号
    * @param {boolean} hasYear 是否需要有年份
+   * @returns {string} 时间模板
    */
-  static GetFormatTpl(symbol: string | string[] | { y: string, m: string, d: string } = '/', hasYear: boolean = false): string {
+  static GetFormatTpl(
+    symbol: string | string[] | { y: string, m: string, d: string } = '/',
+    hasYear: boolean = false,
+  ): string {
     if (typeof symbol === 'string') {
       return hasYear ? `yyyy${symbol}mm${symbol}dd` : `mm${symbol}dd`;
     }
@@ -321,7 +316,7 @@ class QuickDate {
       return str.map((k, i) => `${k}${symbol[i] || ''}`).join('');
     }
     if (typeof symbol === 'object') {
-      const { y, m, d } = symbol;
+      const { y = '', m = '', d = '' } = symbol;
       return hasYear ? `yyyy${y}mm${m}dd${d}` : `mm${m}dd${d}`;
     }
     return hasYear ? 'yyyy/mm/dd' : 'mm/dd';
@@ -334,13 +329,21 @@ class QuickDate {
    * @return {Date}
    */
   static Parse(dateString: string): Date {
-    return new Date(
-      dateString
-        .replace(/-/g, '/')
-        .replace('T', ' ')
-        .replace(/\..*$/, '')
-        .replace(/Z/, ' UTC')
-    );
+    // 合并多个 replace 操作
+    const formattedDateString = dateString
+      .replace(/-/g, '/')
+      .replace('T', ' ')
+      .replace(/\..*$/, '')
+      .replace(/Z/, ' UTC');
+
+    const date = new Date(formattedDateString);
+
+    // 检查生成的日期对象是否有效
+    if (Number.isNaN(date.getTime())) {
+      throw new Error('Invalid date string');
+    }
+
+    return date;
   }
 
   /**
@@ -359,7 +362,11 @@ class QuickDate {
    * @param {Date} d 日期对象
    * @param {number} year 年份
    */
-  static AutoYearFormat(symbol: string | string[] | { y: string, m: string, d: string } = '/', d: Date = new Date(), year: number = (new Date()).getFullYear()): string {
+  static AutoYearFormat(
+    symbol: string | string[] | { y: string, m: string, d: string } = '/',
+    d: Date = new Date(),
+    year: number = (new Date()).getFullYear(),
+  ): string {
     if (year !== d.getFullYear()) {
       const tpl = QuickDate.GetFormatTpl(symbol, true);
       return QuickDate.Format(tpl, d);
@@ -377,34 +384,27 @@ class QuickDate {
    */
   static Format(tpl: string = 'yyyy/mm/dd hh:ii:ss', date: string | number | Date | null = null): string {
     const d = new QuickDate().auto(date);
-    const o: Record<string, string | number> = {};
-    o.yyyy = d.getFullYear();
-    o.yy = `${o.yyyy}`.substring(2);
-    o.m = d.getMonth() + 1;
-    o.mm = o.m < 10 ? `0${o.m}` : o.m;
-    o.d = d.getDate();
-    o.dd = o.d < 10 ? `0${o.d}` : o.d;
-    if (tpl && tpl.indexOf('h') > -1) {
-      o.h = d.getHours();
-      o.hh = o.h < 10 ? (`0${o.h}`) : o.h;
-      o.i = d.getMinutes();
-      o.ii = o.i < 10 ? (`0${o.i}`) : o.i;
-      o.s = d.getSeconds();
-      o.ss = o.s < 10 ? (`0${o.s}`) : o.s;
-      o.ms = d.getMilliseconds();
-      if (o.ms < 10) {
-        o.mss = `00${o.s}`;
-      } else if (o.ms < 100) {
-        o.mss = `0${o.ms}`;
-      } else {
-        o.mss = o.ms;
-      }
-    }
-    if (tpl && tpl.indexOf('w') > -1) {
-      o.w = d.getDay() || 7;
-      o.ww = `0${o.w}`;
-      o.wz = ('日一二三四五六')[o.w % 7];
-    }
+    const padZero = (num: number, length: number = 2) => String(num).padStart(length, '0');
+
+    const o: Record<string, string | number> = {
+      yyyy: d.getFullYear(),
+      yy: String(d.getFullYear()).substring(2),
+      m: d.getMonth() + 1,
+      mm: padZero(d.getMonth() + 1),
+      d: d.getDate(),
+      dd: padZero(d.getDate()),
+      h: d.getHours(),
+      hh: padZero(d.getHours()),
+      i: d.getMinutes(),
+      ii: padZero(d.getMinutes()),
+      s: d.getSeconds(),
+      ss: padZero(d.getSeconds()),
+      ms: d.getMilliseconds(),
+      mss: padZero(d.getMilliseconds(), 3),
+      w: d.getDay() || 7,
+      ww: padZero(d.getDay() || 7),
+      wz: '日一二三四五六'[d.getDay() % 7],
+    };
 
     const dateTemplate = tpl || 'yyyy/mm/dd';
     const regexp = /(yyyy|yy|mss|ms|mm|m|dd|d|hh|h|ii|i|ss|s|wz|ww|w)/ig;
@@ -416,7 +416,7 @@ class QuickDate {
 const quickDate = new QuickDate();
 
 // 导出
-export { 
+export {
   QuickDate,
   quickDate,
 };

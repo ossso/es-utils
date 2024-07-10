@@ -1,5 +1,5 @@
 interface KeyMap {
-    [key: string]: string | KeyMap;
+    [key: string]: string | KeyMap | null | undefined;
 }
 type GetReturnValue<T> = T | undefined;
 declare class Mapping {
@@ -11,7 +11,7 @@ declare class Mapping {
      *
      * @return {any}
      */
-    static mapping(obj: Record<string, any>, key: string): any;
+    static mapping(obj: Record<string, unknown>, key: string): unknown;
     /**
      * 获取数据
      * 支持处理数组指针
@@ -19,16 +19,16 @@ declare class Mapping {
      * @param {string} key 属性名称
      * @return {any}
      */
-    static get<T>(obj: Record<string, any> | T[], key: string): GetReturnValue<T>;
+    static get<T>(obj: Record<string, unknown> | T[] | T, key: string): GetReturnValue<T>;
     /**
      * 数据根据key的映射进行组装
      *
      * @param {KeyMap} keys 映射对象
-     * @param {Record<string, any>} data 数据对象
+     * @param {Record<string, unknown>} data 数据对象
      *
-     * @return {Record<string, any>}
+     * @return {Record<string, unknown>}
      */
-    static each(keys: KeyMap, data: Record<string, any>): Record<string, any>;
+    static each(keys: KeyMap | null | undefined, data: Record<string, unknown> | null | undefined): Record<string, unknown> | undefined;
 }
 export declare const mapping: typeof Mapping.mapping;
 export default Mapping;

@@ -90,16 +90,27 @@ const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 /**
  * 是否为对象
  */
-const isObject = (val) => typeof val === 'object' && val !== null && val.constructor.name === 'Object';
+const isObject = (val) => (typeof val === 'object'
+    && val !== null
+    && val.constructor.name === 'Object');
 /**
  * 判断值是否已经设置类型数据
  * null|undefined为false
  */
 const isSet = (val) => val !== null && val !== undefined;
+/**
+ * 判断一个值是否为空。
+ *
+ * @param val 要检查的值。
+ * @param options 选项对象，或布尔值指示是否检查所有类型的空值。如果为布尔值，则true表示检查所有类型的空值，false表示只检查基本类型的空值。如果为对象，则可以指定更详细的空值检查选项。
+ * @returns 如果值为空，则返回true；否则返回false。
+ */
 const isEmpty = (val, options = null) => {
+    // 初始化各种空检查的标志
     let allEmpty = false;
     let objectEmpty = false;
     let arrayEmpty = false;
+    // 处理options参数，如果是布尔值，则统一空检查标准；否则根据IsEmptyOptions对象设置空检查选项
     if (options === true) {
         allEmpty = true;
     }
@@ -109,41 +120,60 @@ const isEmpty = (val, options = null) => {
         objectEmpty = emptyOptions.objectEmpty || false;
         arrayEmpty = emptyOptions.arrayEmpty || false;
     }
+    // 检查基本类型的空值：null、undefined、空字符串
     if (val === null
         || val === undefined
         || (typeof val === 'string' && val === '')) {
         return true;
     }
+    // 检查对象类型的空值，如果启用了objectEmpty选项且val是一个空对象
     if ((allEmpty || objectEmpty)
         && isObject(val)
         && Object.getOwnPropertyNames(val).length === 0) {
         return true;
     }
+    // 检查数组类型的空值，如果启用了arrayEmpty选项且val是一个空数组
     if ((allEmpty || arrayEmpty) && Array.isArray(val) && val.length === 0) {
         return true;
     }
+    // 如果以上所有检查都未通过，则认为值不为空
     return false;
 };
 /**
  * 浮点数字小数点位数验证
  */
+/**
+ * 检查给定的值是否可以被固定到指定位数的小数。
+ *
+ * 此函数主要用于验证一个数字或数字字符串是否可以被四舍五入到指定的小数位数，
+ * 而不会引起不正确的表示。它首先检查值是否是一个有效的数字，然后检查小数点的位置
+ * 和数量，确保数值的格式正确。如果值包含小数点，它还会验证小数部分的长度是否符合
+ * 指定的固定位数。
+ *
+ * @param val 待检查的值，可以是数字或数字字符串。
+ * @param fixed 小数点后的固定位数，默认为2。
+ * @returns 如果值可以被固定到指定的小数位数，则返回true；否则返回false。
+ */
 const numberToFixedValid = (val, fixed = 2) => {
+    // 检查值是否是NaN（不是一个数字）
     if (Number.isNaN(+val)) {
         return false;
     }
-    // 小数点后两位验证
+    // 将值转换为字符串
     const str = val.toString();
+    // 获取第一个小数点的位置
     const dotIndex = str.indexOf('.');
-    if (dotIndex === 0) {
-        return false;
-    }
+    // 获取最后一个（也是唯一一个）小数点的位置
     const dotIndex2 = str.lastIndexOf('.');
-    if (dotIndex !== dotIndex2) {
+    // 检查小数点是否位于字符串的起始位置，或者字符串中是否存在多个小数点
+    if (dotIndex === 0 || dotIndex !== dotIndex2) {
         return false;
     }
+    // 如果字符串中包含小数点，检查小数部分的长度是否小于等于指定的固定位数加2（包括小数点和可能的正负号）
     if (dotIndex > -1) {
         return str.length - dotIndex < (fixed + 2);
     }
+    // 如果字符串中不包含小数点，或者小数部分的长度符合要求，则返回true
     return true;
 };
 /**
@@ -171,18 +201,23 @@ class Mapping {
      * @return {any}
      */
     static mapping(obj, key) {
+        // 检查 obj 是否为对象，如果不是，返回 undefined
         if (!obj || typeof obj !== 'object') {
-            throw new Error('Invalid input: obj is null or not an object');
+            return undefined;
         }
+        // 检查 key 是否为字符串，如果不是，返回 undefined
         if (typeof key !== 'string') {
-            throw new Error('Invalid input: key is not a string');
+            return undefined;
         }
+        // 检查 key 是否包含非法字符，如果包含，返回 undefined
         if (key.includes('..') || key.startsWith('.') || key.endsWith('.')) {
             return undefined;
         }
+        // 如果 key 包含 '.'，使用 reduce 方法递归获取嵌套属性值
         if (key.includes('.')) {
             return key.split('.').reduce((val, k) => (val !== undefined ? Mapping.get(val, k) : undefined), obj);
         }
+        // 如果 key 不包含 '.'，直接获取属性值
         return Mapping.get(obj, key);
     }
     /**
@@ -225,16 +260,18 @@ class Mapping {
      * 数据根据key的映射进行组装
      *
      * @param {KeyMap} keys 映射对象
-     * @param {Record<string, any>} data 数据对象
+     * @param {Record<string, unknown>} data 数据对象
      *
-     * @return {Record<string, any>}
+     * @return {Record<string, unknown>}
      */
     static each(keys, data) {
+        // 检查 keys 是否为对象，如果不是，返回 undefined
         if (!keys || typeof keys !== 'object') {
-            throw new Error('Invalid input: keys is not a valid object');
+            return undefined;
         }
+        // 检查 data 是否为对象，如果不是，返回 undefined
         if (!data || typeof data !== 'object') {
-            throw new Error('Invalid input: data is null or not an object');
+            return undefined;
         }
         return Object.entries(keys).reduce((acc, [key, value]) => {
             if (typeof value === 'string') {
@@ -246,6 +283,8 @@ class Mapping {
 }
 const { mapping } = Mapping;
 
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-shadow */
 /**
  * 时间工具
  */
@@ -256,6 +295,7 @@ class QuickDate {
      *
      * @return {Date}
      */
+    // eslint-disable-next-line class-methods-use-this
     auto(date = null) {
         /**
          * 如果date本身就是时间对象直接返回
@@ -300,6 +340,7 @@ class QuickDate {
      *
      * @return {Date}
      */
+    // eslint-disable-next-line class-methods-use-this
     parse(dateString) {
         return QuickDate.Parse(dateString);
     }
@@ -320,54 +361,20 @@ class QuickDate {
      */
     format(tpl = 'yyyy/mm/dd hh:ii:ss', date = null) {
         const d = this.auto(date);
-        const o = {};
-        o.yyyy = d.getFullYear();
-        o.yy = `${o.yyyy}`.substring(2);
-        o.m = d.getMonth() + 1;
-        o.mm = o.m < 10 ? `0${o.m}` : o.m;
-        o.d = d.getDate();
-        o.dd = o.d < 10 ? `0${o.d}` : o.d;
-        if (tpl && tpl.indexOf('h') > -1) {
-            o.h = d.getHours();
-            o.hh = o.h < 10 ? (`0${o.h}`) : o.h;
-            o.i = d.getMinutes();
-            o.ii = o.i < 10 ? (`0${o.i}`) : o.i;
-            o.s = d.getSeconds();
-            o.ss = o.s < 10 ? (`0${o.s}`) : o.s;
-            o.ms = d.getMilliseconds();
-            if (o.ms < 10) {
-                o.mss = `00${o.s}`;
-            }
-            else if (o.ms < 100) {
-                o.mss = `0${o.ms}`;
-            }
-            else {
-                o.mss = o.ms;
-            }
-        }
-        if (tpl && tpl.indexOf('w') > -1) {
-            o.w = d.getDay() || 7;
-            o.ww = `0${o.w}`;
-            o.wz = ('日一二三四五六')[o.w % 7];
-        }
-        const dateTemplate = tpl || 'yyyy/mm/dd';
-        const regexp = /(yyyy|yy|mss|ms|mm|m|dd|d|hh|h|ii|i|ss|s|wz|ww|w)/ig;
-        return dateTemplate.replace(regexp, (key) => o[key.toLowerCase()]);
+        return QuickDate.Format(tpl, d);
     }
     /**
      * 自动处理跨年份时间格式化
      * @param {string | string[] | { y: string, m: string, d: string }} symbol 分割符号
      * @param {string | number | Date | null} date 时间字符串或时间对象
+     *
+     * @return {string} 格式化后的时间字符串
      */
     autoYearFormat(symbol = '/', date = null) {
         const d = this.auto(date);
         const dYear = d.getFullYear();
-        const nowYear = (new Date()).getFullYear();
-        if (nowYear !== dYear) {
-            const tpl = QuickDate.GetFormatTpl(symbol, true);
-            return this.format(tpl, d);
-        }
-        const tpl = QuickDate.GetFormatTpl(symbol);
+        const nowYear = new Date().getFullYear();
+        const tpl = QuickDate.GetFormatTpl(symbol, nowYear !== dYear);
         return this.format(tpl, d);
     }
     /**
@@ -401,7 +408,14 @@ class QuickDate {
      * @param {string | number | Date} aDate 对比时间
      * @param {string | number | Date | null} bDate 缺省为当前时间
      * @param {number} maxDays 对比的最大天数，超过后返回aDate的时间字符串
-     * @param {(aDate: string | number | Date, bDate: string | number | Date | null, maxDays: number, s: number, symbol: string) => string} callback 当超过指定天数后，可选执行回调函数的方式返回一个指定的字符串内容
+     * @param {
+     *  (
+     *  aDate: string | number | Date,
+     *  bDate: string | number | Date | null,
+     *  maxDays: number,
+     *  s: number,
+     *  symbol: string) => string
+     * } callback 当超过指定天数后，可选执行回调函数的方式返回一个指定的字符串内容
      *
      * @return {string} xxx前/后
      */
@@ -428,6 +442,7 @@ class QuickDate {
         if (typeof callback === 'function') {
             return callback(aDate, bDate, maxDays, s, symbol);
         }
+        // 兼容旧格式
         return this.format(undefined, aDate);
     }
     /**
@@ -448,6 +463,7 @@ class QuickDate {
      * @param {number} month 月份
      * @return {Date}
      */
+    // eslint-disable-next-line class-methods-use-this
     getLastDayOfMonth(year, month) {
         const date = new Date(year, month, 0);
         date.setHours(23, 59, 59, 999);
@@ -532,8 +548,9 @@ class QuickDate {
     }
     /**
      * 通过分隔符来获取时间模板
-     * @param {string | string[] | { y: string, m: string, d: string }} symbol 分割符号
+     * @param {string | string[] | { y: string, m: string, d: string }} symbol 分隔符号
      * @param {boolean} hasYear 是否需要有年份
+     * @returns {string} 时间模板
      */
     static GetFormatTpl(symbol = '/', hasYear = false) {
         if (typeof symbol === 'string') {
@@ -544,7 +561,7 @@ class QuickDate {
             return str.map((k, i) => `${k}${symbol[i] || ''}`).join('');
         }
         if (typeof symbol === 'object') {
-            const { y, m, d } = symbol;
+            const { y = '', m = '', d = '' } = symbol;
             return hasYear ? `yyyy${y}mm${m}dd${d}` : `mm${m}dd${d}`;
         }
         return hasYear ? 'yyyy/mm/dd' : 'mm/dd';
@@ -556,11 +573,18 @@ class QuickDate {
      * @return {Date}
      */
     static Parse(dateString) {
-        return new Date(dateString
+        // 合并多个 replace 操作
+        const formattedDateString = dateString
             .replace(/-/g, '/')
             .replace('T', ' ')
             .replace(/\..*$/, '')
-            .replace(/Z/, ' UTC'));
+            .replace(/Z/, ' UTC');
+        const date = new Date(formattedDateString);
+        // 检查生成的日期对象是否有效
+        if (Number.isNaN(date.getTime())) {
+            throw new Error('Invalid date string');
+        }
+        return date;
     }
     /**
      * 克隆一个时间对象
@@ -594,36 +618,26 @@ class QuickDate {
      */
     static Format(tpl = 'yyyy/mm/dd hh:ii:ss', date = null) {
         const d = new QuickDate().auto(date);
-        const o = {};
-        o.yyyy = d.getFullYear();
-        o.yy = `${o.yyyy}`.substring(2);
-        o.m = d.getMonth() + 1;
-        o.mm = o.m < 10 ? `0${o.m}` : o.m;
-        o.d = d.getDate();
-        o.dd = o.d < 10 ? `0${o.d}` : o.d;
-        if (tpl && tpl.indexOf('h') > -1) {
-            o.h = d.getHours();
-            o.hh = o.h < 10 ? (`0${o.h}`) : o.h;
-            o.i = d.getMinutes();
-            o.ii = o.i < 10 ? (`0${o.i}`) : o.i;
-            o.s = d.getSeconds();
-            o.ss = o.s < 10 ? (`0${o.s}`) : o.s;
-            o.ms = d.getMilliseconds();
-            if (o.ms < 10) {
-                o.mss = `00${o.s}`;
-            }
-            else if (o.ms < 100) {
-                o.mss = `0${o.ms}`;
-            }
-            else {
-                o.mss = o.ms;
-            }
-        }
-        if (tpl && tpl.indexOf('w') > -1) {
-            o.w = d.getDay() || 7;
-            o.ww = `0${o.w}`;
-            o.wz = ('日一二三四五六')[o.w % 7];
-        }
+        const padZero = (num, length = 2) => String(num).padStart(length, '0');
+        const o = {
+            yyyy: d.getFullYear(),
+            yy: String(d.getFullYear()).substring(2),
+            m: d.getMonth() + 1,
+            mm: padZero(d.getMonth() + 1),
+            d: d.getDate(),
+            dd: padZero(d.getDate()),
+            h: d.getHours(),
+            hh: padZero(d.getHours()),
+            i: d.getMinutes(),
+            ii: padZero(d.getMinutes()),
+            s: d.getSeconds(),
+            ss: padZero(d.getSeconds()),
+            ms: d.getMilliseconds(),
+            mss: padZero(d.getMilliseconds(), 3),
+            w: d.getDay() || 7,
+            ww: padZero(d.getDay() || 7),
+            wz: '日一二三四五六'[d.getDay() % 7],
+        };
         const dateTemplate = tpl || 'yyyy/mm/dd';
         const regexp = /(yyyy|yy|mss|ms|mm|m|dd|d|hh|h|ii|i|ss|s|wz|ww|w)/ig;
         return dateTemplate.replace(regexp, (key) => o[key.toLowerCase()]);
@@ -649,15 +663,15 @@ const sum = (...args) => {
     if (args.length === 0)
         return 0;
     const nums = args
-        .map(arg => (typeof arg === 'string' ? arg.trim() : arg))
-        .filter(arg => arg !== '' && !isNaN(Number(arg)))
+        .map((arg) => (typeof arg === 'string' ? arg.trim() : arg))
+        .filter((arg) => arg !== '' && !Number.isNaN(+arg))
         .map(Number);
     if (nums.length === 0)
         return 0;
     if (nums.length === 1)
         return nums[0];
     return nums.reduce((total, num) => {
-        const [intPart, decPart] = num.toString().split('.');
+        const [, decPart] = num.toString().split('.');
         if (decPart) {
             const factor = 10 ** decPart.length;
             return Math.round(total * factor + num * factor) / factor;
@@ -675,19 +689,27 @@ const toPoint = (num) => Math.floor(Math.round((num * 1000)) / 10);
 const toFen = toPoint;
 /**
  * 转为 元
- * @param {Number} num
- * @param {Boolean} locale
- * @returns 返回元
+ *
+ * 将数值转换为人民币格式的字符串或数字。
+ * @param num 要转换的数值，单位为分。
+ * @param locale 是否使用本地化格式，默认为false。
+ * @returns 返回转换后的人民币字符串或数字。如果locale为true，则返回本地化格式的字符串；否则返回标准格式的字符串或数字。
  */
 const toYuan = (num, locale = false) => {
+    // 将数值转换为元的单位
     const n = num / 100;
+    // 确定数值的正负符号
     const symbol = n < 0 ? '-' : '';
+    // 处理浮点数精度问题，尝试将数值转换为人民币格式
     // 处理浮点精度不正确的内容
     try {
         const s = n.toString();
+        // 判断是否有小数点，并且小数点后至少有两位
         if (s.indexOf('.') > -1 && s.indexOf('.') < s.length - 2) {
             const [int, float] = s.split('.');
+            // 构造人民币标准格式的字符串
             const toYuanString = Number(`${symbol}${Math.abs(Number(int))}.${float.substring(0, 2)}`);
+            // 根据locale参数决定返回本地化格式还是标准格式
             if (locale) {
                 return toYuanString.toLocaleString();
             }
@@ -695,8 +717,10 @@ const toYuan = (num, locale = false) => {
         }
     }
     catch (err) {
+        // 捕获并记录转换过程中的错误
         console.error(err);
     }
+    // 如果数值格式不符合要求，或者locale为true，则返回本地化格式的数值
     if (locale) {
         return n.toLocaleString();
     }
@@ -705,23 +729,57 @@ const toYuan = (num, locale = false) => {
 const toRMB = toYuan;
 /**
  * 数字金额转为万
+ * 大于1万的，小数点后一位四舍五入
+ *
+ * 将数字转换为万为单位的字符串表示，支持指定保留位数和单位（元或分）。
+ * @param num 要转换的数字
+ * @param fixed 保留小数点后的位数，默认为1位
+ * @param type 单位类型，可选值为'fen'（分）或'yuan'（元，默认值为元）
+ * @returns 转换后的字符串
  */
 const toWan = (num, fixed = 1, type = 'yuan') => {
+    // 根据数字正负决定符号
     const symbol = num < 0 ? '-' : '';
+    // 根据类型转换并取绝对值，如果是分，则先转换为元
     const n = type === 'fen' ? Math.abs(toYuan(num)) : Math.abs(num);
+    // 格式化数字，保留指定的小数位数
+    const formatNumber = (value, decimalPlaces) => value.toFixed(decimalPlaces).replace(/(\.0+|0+)$/, '');
+    // 如果数字大于等于1万
     if (n >= 10000) {
-        const k = Math.round(n / 1000);
+        // 计算万位数
+        const k = n / 10000;
+        // 如果不需要保留小数
         if (fixed === 0) {
-            return `${symbol}${(Math.round(k / 10) * 1).toLocaleString()}万`;
+            return `${symbol}${Math.round(k).toLocaleString()}万`;
         }
-        if (fixed > -1) {
-            return `${symbol}${parseFloat((k / 10).toFixed(fixed))}万`;
-        }
-        return `${symbol}${(parseFloat((k / 10).toFixed(2)) * 1).toLocaleString()}万`;
+        // 返回万位数，保留指定位数的小数
+        return `${symbol}${formatNumber(k, fixed)}万`;
     }
-    return `${symbol}${(parseFloat(n.toFixed(2)) * 1).toLocaleString()}`;
+    // 如果数字小于1万，直接转换并返回，保留指定小数位数
+    return `${symbol}${formatNumber(n, fixed)}`;
 };
 const toRMBWan = toWan;
+/**
+ * 自动处理数字转换为万或显示全部数字
+ * 小于1万的显示全部数字，支持fixed参数；如果大于1万的调用toWan方法
+ *
+ * @param num 要转换的数字
+ * @param fixed 保留小数点后的位数，默认为1位
+ * @param type 单位类型，可选值为'fen'（分）或'yuan'（元，默认值为元）
+ * @returns 转换后的字符串
+ */
+const autoToWan = (num, fixed = 1, type = 'yuan') => {
+    // 根据类型转换并取绝对值，如果是分，则先转换为元
+    const n = type === 'fen' ? Math.abs(toYuan(num)) : Math.abs(num);
+    // 格式化数字，保留指定的小数位数
+    const formatNumber = (value, decimalPlaces) => value.toFixed(decimalPlaces).replace(/(\.0+|0+)$/, '');
+    // 如果数字小于1万，直接转换并返回，保留指定小数位数
+    if (n < 10000) {
+        return formatNumber(n, fixed);
+    }
+    // 如果数字大于等于1万，调用toWan方法
+    return toWan(num, fixed, type);
+};
 /**
  * @description 数字转中文数码
  *
@@ -800,6 +858,7 @@ const toUpper = number2Chinese;
 
 var rmbTool = /*#__PURE__*/Object.freeze({
     __proto__: null,
+    autoToWan: autoToWan,
     number2Chinese: number2Chinese,
     toFen: toFen,
     toPoint: toPoint,

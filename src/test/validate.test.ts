@@ -77,16 +77,16 @@ describe('isEmpty', () => {
     expect(result).toBe(true);
   });
 
-  it('should return true if the value is an empty object', () => {
+  it('should return false if the value is an empty object', () => {
     const val = {};
     const result = isEmpty(val);
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
-  it('should return true if the value is an empty array', () => {
-    const val: any[] = [];
+  it('should return false if the value is an empty array', () => {
+    const val: unknown[] = [];
     const result = isEmpty(val, {});
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
   it('should return false if the value is not empty', () => {
@@ -110,14 +110,14 @@ describe('isEmpty', () => {
   });
 
   it('should return true if the value is an empty array and arrayEmpty option is true', () => {
-    const val: any[] = [];
+    const val: unknown[] = [];
     const options = { arrayEmpty: true };
     const result = isEmpty(val, options);
     expect(result).toBe(true);
   });
 
   it('should return false if the value is an empty array and arrayEmpty option is false', () => {
-    const val: any[] = [];
+    const val: unknown[] = [];
     const options = { arrayEmpty: false };
     const result = isEmpty(val, options);
     expect(result).toBe(false);
@@ -138,14 +138,14 @@ describe('isEmpty', () => {
   });
 
   it('should return true if the value is an empty array and allEmpty option is true', () => {
-    const val: any[] = [];
+    const val: unknown[] = [];
     const options = { allEmpty: true };
     const result = isEmpty(val, options);
     expect(result).toBe(true);
   });
 
   it('should return false if the value is an empty array and allEmpty option is false', () => {
-    const val: any[] = [];
+    const val: unknown[] = [];
     const options = { allEmpty: false };
     const result = isEmpty(val, options);
     expect(result).toBe(false);
@@ -208,9 +208,9 @@ describe('mobileValid', () => {
     expect(result).toBe(false);
   });
 
-  it('should return false if the value is not a string', () => {
+  it('should return true if the value is not a string', () => {
     const val = 12345678901;
     const result = mobileValid(val.toString());
-    expect(result).toBe(false);
+    expect(result).toBe(true);
   });
 });

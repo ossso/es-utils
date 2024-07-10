@@ -33,6 +33,8 @@ declare class QuickDate {
      * 自动处理跨年份时间格式化
      * @param {string | string[] | { y: string, m: string, d: string }} symbol 分割符号
      * @param {string | number | Date | null} date 时间字符串或时间对象
+     *
+     * @return {string} 格式化后的时间字符串
      */
     autoYearFormat(symbol?: string | string[] | {
         y: string;
@@ -58,7 +60,14 @@ declare class QuickDate {
      * @param {string | number | Date} aDate 对比时间
      * @param {string | number | Date | null} bDate 缺省为当前时间
      * @param {number} maxDays 对比的最大天数，超过后返回aDate的时间字符串
-     * @param {(aDate: string | number | Date, bDate: string | number | Date | null, maxDays: number, s: number, symbol: string) => string} callback 当超过指定天数后，可选执行回调函数的方式返回一个指定的字符串内容
+     * @param {
+     *  (
+     *  aDate: string | number | Date,
+     *  bDate: string | number | Date | null,
+     *  maxDays: number,
+     *  s: number,
+     *  symbol: string) => string
+     * } callback 当超过指定天数后，可选执行回调函数的方式返回一个指定的字符串内容
      *
      * @return {string} xxx前/后
      */
@@ -124,8 +133,9 @@ declare class QuickDate {
     getLastDayOfMonthTime(date?: string | Date): number;
     /**
      * 通过分隔符来获取时间模板
-     * @param {string | string[] | { y: string, m: string, d: string }} symbol 分割符号
+     * @param {string | string[] | { y: string, m: string, d: string }} symbol 分隔符号
      * @param {boolean} hasYear 是否需要有年份
+     * @returns {string} 时间模板
      */
     static GetFormatTpl(symbol?: string | string[] | {
         y: string;

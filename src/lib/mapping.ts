@@ -1,5 +1,6 @@
+// 兼容null和undefined
 interface KeyMap {
-  [key: string]: string | KeyMap;
+  [key: string]: string | KeyMap | null | undefined;
 }
 
 type GetReturnValue<T> = T | undefined;
@@ -13,19 +14,24 @@ class Mapping {
    *
    * @return {any}
    */
-  static mapping(obj: Record<string, any>, key: string): any {
+  static mapping(obj: Record<string, unknown>, key: string): unknown {
+    // 检查 obj 是否为对象，如果不是，返回 undefined
     if (!obj || typeof obj !== 'object') {
-      throw new Error('Invalid input: obj is null or not an object');
+      return undefined;
     }
+    // 检查 key 是否为字符串，如果不是，返回 undefined
     if (typeof key !== 'string') {
-      throw new Error('Invalid input: key is not a string');
+      return undefined;
     }
+    // 检查 key 是否包含非法字符，如果包含，返回 undefined
     if (key.includes('..') || key.startsWith('.') || key.endsWith('.')) {
       return undefined;
     }
+    // 如果 key 包含 '.'，使用 reduce 方法递归获取嵌套属性值
     if (key.includes('.')) {
-      return key.split('.').reduce((val, k) => (val !== undefined ? Mapping.get(val, k) : undefined), obj);
+      return key.split('.').reduce((val: unknown, k) => (val !== undefined ? Mapping.get(val, k) : undefined), obj);
     }
+    // 如果 key 不包含 '.'，直接获取属性值
     return Mapping.get(obj, key);
   }
 
@@ -36,7 +42,7 @@ class Mapping {
    * @param {string} key 属性名称
    * @return {any}
    */
-  static get<T>(obj: Record<string, any> | T[], key: string): GetReturnValue<T> {
+  static get<T>(obj: Record<string, unknown> | T[] | T, key: string): GetReturnValue<T> {
     if (!obj || typeof obj !== 'object' || !key) {
       return undefined;
     }
@@ -55,7 +61,7 @@ class Mapping {
         }
       } else {
         const pre = key.slice(0, matchIndex);
-        const list = (obj as Record<string, any>)[pre];
+        const list = (obj as Record<string, unknown>)[pre];
         if (Array.isArray(list) && index < list.length) {
           const val = list[index];
           const restKey = key.slice(matchIndex + fullMatch.length);
@@ -72,19 +78,24 @@ class Mapping {
    * 数据根据key的映射进行组装
    *
    * @param {KeyMap} keys 映射对象
-   * @param {Record<string, any>} data 数据对象
+   * @param {Record<string, unknown>} data 数据对象
    *
-   * @return {Record<string, any>}
+   * @return {Record<string, unknown>}
    */
-  static each(keys: KeyMap, data: Record<string, any>): Record<string, any> {
+  static each(
+    keys: KeyMap | null | undefined,
+    data: Record<string, unknown> | null | undefined,
+  ): Record<string, unknown> | undefined {
+    // 检查 keys 是否为对象，如果不是，返回 undefined
     if (!keys || typeof keys !== 'object') {
-      throw new Error('Invalid input: keys is not a valid object');
+      return undefined;
     }
+    // 检查 data 是否为对象，如果不是，返回 undefined
     if (!data || typeof data !== 'object') {
-      throw new Error('Invalid input: data is null or not an object');
+      return undefined;
     }
 
-    return Object.entries(keys).reduce((acc: Record<string, any>, [key, value]) => {
+    return Object.entries(keys).reduce((acc: Record<string, unknown>, [key, value]) => {
       if (typeof value === 'string') {
         acc[key] = Mapping.mapping(data, value);
       }

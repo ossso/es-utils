@@ -8,28 +8,37 @@ export const toFen = toPoint;
 
 /**
  * 转为 元
- * @param {Number} num
- * @param {Boolean} locale
- * @returns 返回元
+ *
+ * 将数值转换为人民币格式的字符串或数字。
+ * @param num 要转换的数值，单位为分。
+ * @param locale 是否使用本地化格式，默认为false。
+ * @returns 返回转换后的人民币字符串或数字。如果locale为true，则返回本地化格式的字符串；否则返回标准格式的字符串或数字。
  */
 export const toYuan = (num: number, locale: boolean = false): number | string => {
+  // 将数值转换为元的单位
   const n = num / 100;
+  // 确定数值的正负符号
   const symbol = n < 0 ? '-' : '';
+  // 处理浮点数精度问题，尝试将数值转换为人民币格式
   // 处理浮点精度不正确的内容
   try {
     const s = n.toString();
+    // 判断是否有小数点，并且小数点后至少有两位
     if (s.indexOf('.') > -1 && s.indexOf('.') < s.length - 2) {
       const [int, float] = s.split('.');
+      // 构造人民币标准格式的字符串
       const toYuanString = Number(`${symbol}${Math.abs(Number(int))}.${float.substring(0, 2)}`);
+      // 根据locale参数决定返回本地化格式还是标准格式
       if (locale) {
         return toYuanString.toLocaleString();
       }
       return toYuanString;
     }
   } catch (err) {
+    // 捕获并记录转换过程中的错误
     console.error(err);
   }
-
+  // 如果数值格式不符合要求，或者locale为true，则返回本地化格式的数值
   if (locale) {
     return n.toLocaleString();
   }
@@ -39,23 +48,70 @@ export const toRMB = toYuan;
 
 /**
  * 数字金额转为万
+ * 大于1万的，小数点后一位四舍五入
+ *
+ * 将数字转换为万为单位的字符串表示，支持指定保留位数和单位（元或分）。
+ * @param num 要转换的数字
+ * @param fixed 保留小数点后的位数，默认为1位
+ * @param type 单位类型，可选值为'fen'（分）或'yuan'（元，默认值为元）
+ * @returns 转换后的字符串
  */
 export const toWan = (num: number, fixed: number = 1, type: 'yuan' | 'fen' = 'yuan'): string => {
+  // 根据数字正负决定符号
   const symbol = num < 0 ? '-' : '';
+  // 根据类型转换并取绝对值，如果是分，则先转换为元
   const n = type === 'fen' ? Math.abs(toYuan(num) as number) : Math.abs(num);
+
+  // 格式化数字，保留指定的小数位数
+  const formatNumber = (
+    value: number,
+    decimalPlaces: number,
+  ): string => value.toFixed(decimalPlaces).replace(/(\.0+|0+)$/, '');
+
+  // 如果数字大于等于1万
   if (n >= 10000) {
-    const k = Math.round(n / 1000);
+    // 计算万位数
+    const k = n / 10000;
+    // 如果不需要保留小数
     if (fixed === 0) {
-      return `${symbol}${(Math.round(k / 10) * 1).toLocaleString()}万`;
+      return `${symbol}${Math.round(k).toLocaleString()}万`;
     }
-    if (fixed > -1) {
-      return `${symbol}${parseFloat((k / 10).toFixed(fixed))}万`;
-    }
-    return `${symbol}${(parseFloat((k / 10).toFixed(2)) * 1).toLocaleString()}万`;
+    // 返回万位数，保留指定位数的小数
+    return `${symbol}${formatNumber(k, fixed)}万`;
   }
-  return `${symbol}${(parseFloat(n.toFixed(2)) * 1).toLocaleString()}`;
+
+  // 如果数字小于1万，直接转换并返回，保留指定小数位数
+  return `${symbol}${formatNumber(n, fixed)}`;
 };
 export const toRMBWan = toWan;
+
+/**
+ * 自动处理数字转换为万或显示全部数字
+ * 小于1万的显示全部数字，支持fixed参数；如果大于1万的调用toWan方法
+ *
+ * @param num 要转换的数字
+ * @param fixed 保留小数点后的位数，默认为1位
+ * @param type 单位类型，可选值为'fen'（分）或'yuan'（元，默认值为元）
+ * @returns 转换后的字符串
+ */
+export const autoToWan = (num: number, fixed: number = 1, type: 'yuan' | 'fen' = 'yuan'): string => {
+  // 根据类型转换并取绝对值，如果是分，则先转换为元
+  const n = type === 'fen' ? Math.abs(toYuan(num) as number) : Math.abs(num);
+
+  // 格式化数字，保留指定的小数位数
+  const formatNumber = (
+    value: number,
+    decimalPlaces: number,
+  ): string => value.toFixed(decimalPlaces).replace(/(\.0+|0+)$/, '');
+
+  // 如果数字小于1万，直接转换并返回，保留指定小数位数
+  if (n < 10000) {
+    return formatNumber(n, fixed);
+  }
+
+  // 如果数字大于等于1万，调用toWan方法
+  return toWan(num, fixed, type);
+};
 
 /**
  * @description 数字转中文数码
