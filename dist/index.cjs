@@ -373,37 +373,7 @@ class QuickDate {
      * @return {string} 格式化后的时间字符串
      */
     autoYearFormat(symbol = '/', date = null) {
-        const d = this.auto(date);
-        const dYear = d.getFullYear();
-        const nowYear = new Date().getFullYear();
-        const tpl = QuickDate.GetFormatTpl(symbol, nowYear !== dYear);
-        return this.format(tpl, d);
-    }
-    /**
-     * 获取指定日期的开始时间戳或者结束时间戳
-     * @param {string | Date | number} date 日期符号
-     * @param {string} tag start开始 end结束
-     * @returns {Date} 毫秒级时间戳
-     */
-    getDateFixed(date, tag = 'start') {
-        const d = this.auto(date);
-        if (tag === 'start') {
-            d.setHours(0, 0, 0, 0);
-        }
-        if (tag === 'end') {
-            d.setHours(23, 59, 59, 999);
-        }
-        return d;
-    }
-    /**
-     * 获取指定日期的开始时间戳或者结束时间戳
-     * @param {string | Date | number} date 日期符号
-     * @param {string} tag start开始 end结束
-     * @returns {number} 毫秒级时间戳
-     */
-    getTimeFixed(date, tag = 'start') {
-        const d = this.getDateFixed(date, tag);
-        return d.getTime();
+        return QuickDate.AutoYearFormat(symbol, this.auto(date));
     }
     /**
      * 多久前or后
@@ -460,16 +430,30 @@ class QuickDate {
         return Math.floor(s / 24 / 60 / 60 / 1000);
     }
     /**
-     * 获取指定月份最后一天
-     * @param {number} year 年份
-     * @param {number} month 月份
-     * @return {Date}
+     * 获取指定日期的开始时间戳或者结束时间对象
+     * @param {string | Date | number} date 日期符号
+     * @param {string} tag start开始 end结束
+     * @returns {Date} 时间对象
      */
-    // eslint-disable-next-line class-methods-use-this
-    getLastDayOfMonth(year, month) {
-        const date = new Date(year, month, 0);
-        date.setHours(23, 59, 59, 999);
-        return date;
+    getDateFixed(date, tag = 'start') {
+        const d = this.auto(date);
+        if (tag === 'start') {
+            d.setHours(0, 0, 0, 0);
+        }
+        if (tag === 'end') {
+            d.setHours(23, 59, 59, 999);
+        }
+        return d;
+    }
+    /**
+     * 获取指定日期的开始时间戳或者结束时间戳
+     * @param {string | Date | number} date 日期符号
+     * @param {string} tag start开始 end结束
+     * @returns {number} 毫秒级时间戳
+     */
+    getTimeFixed(date, tag = 'start') {
+        const d = this.getDateFixed(date, tag);
+        return d.getTime();
     }
     /**
      * 获取当前季度
@@ -531,22 +515,28 @@ class QuickDate {
         return d;
     }
     /**
-     * 获取时间的月份的第一天的开始
-     * @param {string | Date} date 日期符号
+     * 获取时间的月份的第一天
+     * @param {number} year 年份
+     * @param {number} month 月份
+     * @return {Date}
      */
-    getFirstDayOfMonth(date = new Date()) {
-        const d = this.auto(date);
-        d.setDate(1);
-        return this.getDateFixed(d, 'start');
+    // eslint-disable-next-line class-methods-use-this
+    getFirstDayOfMonth(year, month) {
+        const date = new Date(year, month, 1);
+        date.setHours(0, 0, 0, 0);
+        return date;
     }
     /**
-     * 获取时间的月份的最后一天的结束
-     * @param {string | Date} date 日期符号
+     * 获取指定月份最后一天
+     * @param {number} year 年份
+     * @param {number} month 月份
+     * @return {Date}
      */
-    getLastDayOfMonthTime(date = new Date()) {
-        const d = this.auto(date);
-        const lastDate = this.getLastDayOfMonth(d.getFullYear(), d.getMonth() + 1);
-        return lastDate.getTime();
+    // eslint-disable-next-line class-methods-use-this
+    getLastDayOfMonth(year, month) {
+        const date = new Date(year, month, 0);
+        date.setHours(23, 59, 59, 999);
+        return date;
     }
     /**
      * 通过分隔符来获取时间模板
@@ -613,35 +603,55 @@ class QuickDate {
     }
     /**
      * 格式化输出时间
-     * @param {string} tpl 字符串模板
-     * @param {string | number | Date | null} date 被转换的时间
-     *
-     * @return {string} 2000/01/01 00:00:00
+     * @param {string} tpl 字符串模板，用于定义时间的输出格式
+     * @param {string | number | Date | null} date 需要格式化的日期，可以是字符串、数字、Date对象或null，默认为null
+     * @returns {string} 格式化后的时间字符串
      */
     static Format(tpl = 'yyyy/mm/dd hh:ii:ss', date = null) {
+        // 创建QuickDate对象，并自动解析日期参数
         const d = new QuickDate().auto(date);
+        // 定义一个零填充函数，用于将数字转换为指定位数的字符串
         const padZero = (num, length = 2) => String(num).padStart(length, '0');
+        // 创建一个对象o，用于存储时间单位的值和格式化后的字符串
         const o = {
-            yyyy: d.getFullYear(),
-            yy: String(d.getFullYear()).substring(2),
-            m: d.getMonth() + 1,
-            mm: padZero(d.getMonth() + 1),
-            d: d.getDate(),
-            dd: padZero(d.getDate()),
-            h: d.getHours(),
-            hh: padZero(d.getHours()),
-            i: d.getMinutes(),
-            ii: padZero(d.getMinutes()),
-            s: d.getSeconds(),
-            ss: padZero(d.getSeconds()),
-            ms: d.getMilliseconds(),
-            mss: padZero(d.getMilliseconds(), 3),
-            w: d.getDay() || 7,
-            ww: padZero(d.getDay() || 7),
-            wz: '日一二三四五六'[d.getDay() % 7],
+            yyyy: d.getFullYear(), // 四位数的年份
+            yy: String(d.getFullYear()).substring(2), // 两位数的年份
+            m: d.getMonth() + 1, // 月份，从1开始
+            mm: padZero(d.getMonth() + 1), // 两位数的月份
+            d: d.getDate(), // 日期
+            dd: padZero(d.getDate()), // 两位数的日期
+            h: d.getHours(), // 小时，24小时制
+            hh: padZero(d.getHours()), // 两位数的小时，24小时制
+            hs: d.getHours() % 12, // 小时，12小时制
+            hhs: padZero(d.getHours() % 12), // 两位数的小时，12小时制
+            p: d.getHours() < 12 ? 'AM' : 'PM', // 上午或下午
+            pz: d.getHours() < 12 ? '上午' : '下午', // 中文上午或下午
+            // 根据小时确定具体时段：凌晨、上午、下午、晚上
+            apz: (() => {
+                const h = d.getHours();
+                if (h < 6)
+                    return '凌晨';
+                if (h < 12)
+                    return '上午';
+                if (h < 18)
+                    return '下午';
+                return '晚上';
+            })(),
+            i: d.getMinutes(), // 分钟
+            ii: padZero(d.getMinutes()), // 两位数的分钟
+            s: d.getSeconds(), // 秒数
+            ss: padZero(d.getSeconds()), // 两位数的秒数
+            ms: d.getMilliseconds(), // 毫秒数
+            mss: padZero(d.getMilliseconds(), 3), // 三位数的毫秒数
+            w: d.getDay() || 7, // 星期几，从0开始，如果没有获取到则默认为7
+            ww: padZero(d.getDay() || 7), // 两位数的星期几
+            wz: '日一二三四五六'[d.getDay() % 7], // 星期几的中文简写
         };
+        // 定义日期模板，默认为'yyyy/mm/dd'
         const dateTemplate = tpl || 'yyyy/mm/dd';
-        const regexp = /(yyyy|yy|mss|ms|mm|m|dd|d|hh|h|ii|i|ss|s|wz|ww|w)/ig;
+        // 创建正则表达式，用于匹配模板中的时间单位占位符
+        const regexp = /(yyyy|yy|mss|ms|mm|m|dd|d|hs|hhs|hh|h|ii|i|ss|s|wz|ww|w|apz|pz|p)/ig;
+        // 使用对象o中的值替换模板中的占位符，返回格式化后的时间字符串
         return dateTemplate.replace(regexp, (key) => o[key.toLowerCase()]);
     }
 }

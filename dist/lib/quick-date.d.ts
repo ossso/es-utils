@@ -42,20 +42,6 @@ declare class QuickDate {
         d: string;
     }, date?: string | number | Date | null): string;
     /**
-     * 获取指定日期的开始时间戳或者结束时间戳
-     * @param {string | Date | number} date 日期符号
-     * @param {string} tag start开始 end结束
-     * @returns {Date} 毫秒级时间戳
-     */
-    getDateFixed(date: string | Date | number, tag?: 'start' | 'end'): Date;
-    /**
-     * 获取指定日期的开始时间戳或者结束时间戳
-     * @param {string | Date | number} date 日期符号
-     * @param {string} tag start开始 end结束
-     * @returns {number} 毫秒级时间戳
-     */
-    getTimeFixed(date: string | Date | number, tag?: 'start' | 'end'): number;
-    /**
      * 多久前or后
      * @param {string | number | Date} aDate 对比时间
      * @param {string | number | Date | null} bDate 缺省为当前时间
@@ -80,12 +66,19 @@ declare class QuickDate {
      */
     diffDays(aDate: string | Date, bDate: string | Date): number;
     /**
-     * 获取指定月份最后一天
-     * @param {number} year 年份
-     * @param {number} month 月份
-     * @return {Date}
+     * 获取指定日期的开始时间戳或者结束时间对象
+     * @param {string | Date | number} date 日期符号
+     * @param {string} tag start开始 end结束
+     * @returns {Date} 时间对象
      */
-    getLastDayOfMonth(year: number, month: number): Date;
+    getDateFixed(date: string | Date | number, tag?: 'start' | 'end'): Date;
+    /**
+     * 获取指定日期的开始时间戳或者结束时间戳
+     * @param {string | Date | number} date 日期符号
+     * @param {string} tag start开始 end结束
+     * @returns {number} 毫秒级时间戳
+     */
+    getTimeFixed(date: string | Date | number, tag?: 'start' | 'end'): number;
     /**
      * 获取当前季度
      * @param {string | Date | null} date 日期对象或者符号
@@ -122,15 +115,19 @@ declare class QuickDate {
      */
     getSomeSecondsDate(num: number, date?: string | Date): Date;
     /**
-     * 获取时间的月份的第一天的开始
-     * @param {string | Date} date 日期符号
+     * 获取时间的月份的第一天
+     * @param {number} year 年份
+     * @param {number} month 月份
+     * @return {Date}
      */
-    getFirstDayOfMonth(date?: string | Date): Date;
+    getFirstDayOfMonth(year: number, month: number): Date;
     /**
-     * 获取时间的月份的最后一天的结束
-     * @param {string | Date} date 日期符号
+     * 获取指定月份最后一天
+     * @param {number} year 年份
+     * @param {number} month 月份
+     * @return {Date}
      */
-    getLastDayOfMonthTime(date?: string | Date): number;
+    getLastDayOfMonth(year: number, month: number): Date;
     /**
      * 通过分隔符来获取时间模板
      * @param {string | string[] | { y: string, m: string, d: string }} symbol 分隔符号
@@ -169,10 +166,9 @@ declare class QuickDate {
     }, d?: Date, year?: number): string;
     /**
      * 格式化输出时间
-     * @param {string} tpl 字符串模板
-     * @param {string | number | Date | null} date 被转换的时间
-     *
-     * @return {string} 2000/01/01 00:00:00
+     * @param {string} tpl 字符串模板，用于定义时间的输出格式
+     * @param {string | number | Date | null} date 需要格式化的日期，可以是字符串、数字、Date对象或null，默认为null
+     * @returns {string} 格式化后的时间字符串
      */
     static Format(tpl?: string, date?: string | number | Date | null): string;
 }
