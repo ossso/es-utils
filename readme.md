@@ -51,6 +51,8 @@ const data = { a: { b: { c: 42 } }, d: { e: 24 } };
 const result = Mapping.each(keys, data); // 返回 { x: 42, y: 24 }
 ```
 
+[使用说明](https://github.com/ossso/es-utils/tree/master/docs/)
+
 ## 许可证
 本项目基于 MIT 许可证开源。
 
