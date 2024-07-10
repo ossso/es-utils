@@ -4,9 +4,13 @@
       "@babel/preset-env",
       {
         "targets": {
-          "esmodules": true
+          "node": "current"
         }
       }
-    ]
+    ],
+    "@babel/preset-typescript"
+  ],
+  "plugins": [
+    "@babel/plugin-transform-modules-commonjs"
   ]
 }
